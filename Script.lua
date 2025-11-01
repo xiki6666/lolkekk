@@ -205,7 +205,7 @@ end
 local function setSpeedhackKeybind()
 	keybindListening = true
 	keybindButton.Text = "Press any key..."
-
+	
 	local connection
 	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
 		if keybindListening and not gameProcessed then
