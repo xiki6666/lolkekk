@@ -7,18 +7,21 @@ local speedInput = Instance.new("TextBox") -- Поле для ввода ско�
 local speedhackInput = Instance.new("TextBox") -- Поле для ввода скорости Speedhack
 local speedhackButton = Instance.new("TextButton") -- Кнопка включения/выключения Speedhack
 local keybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши Speedhack
+local flyKeybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши полета
 
 -- Переменные для управления полетом, Speedhack
 local flying = false
 local speed = 50 -- Скорость полета по умолчанию
-local speedhackSpeed = 16 -- Стандартная скорость передвижения
+local speedhackSpeed = 33 -- Стандартная скорость передвижения изменена на 33
 local speedhackEnabled = false
 local flyConnection
 local bodyVelocity
 local bodyGyro
 local menuVisible = true
-local speedhackKey = Enum.KeyCode.LeftShift -- Клавиша по умолчанию для Speedhack
+local speedhackKey = Enum.KeyCode.R -- Клавиша по умолчанию для Speedhack изменена на R
+local flyKey = Enum.KeyCode.G -- Клавиша по умолчанию для полета
 local keybindListening = false
+local flyKeybindListening = false
 
 -- Обновление меню после смерти
 local function restoreMenuOnDeath()
@@ -27,6 +30,11 @@ local function restoreMenuOnDeath()
 		wait(1) -- Небольшая задержка после возрождения
 		screenGui.Parent = player:WaitForChild("PlayerGui")
 		frame.Visible = menuVisible
+
+		-- Восстанавливаем Speedhack если был включен
+		if speedhackEnabled then
+			character:WaitForChild("Humanoid").WalkSpeed = speedhackSpeed
+		end
 	end)
 end
 
@@ -36,10 +44,10 @@ screenGui.ResetOnSpawn = false -- Чтобы не сбрасывалось по�
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Настройка фрейма (меню)
-frame.Size = UDim2.new(0, 400, 0, 250) -- Уменьшили высоту меню
+frame.Size = UDim2.new(0, 400, 0, 280) -- Увеличили высоту меню для новой кнопки
 frame.Position = UDim2.new(0.5, -200, 0.5, -250) -- Центр экрана
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- Темно-серый цвет
-frame.BackgroundTransparency = 0.2 -- Полупрозрачность
+frame.BackgroundTransparency = 0.2 -- Полупозрачность
 frame.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
 frame.BorderSizePixel = 2 -- Размер обводки
 frame.Active = true -- Для перетаскивания
@@ -102,7 +110,10 @@ speedhackInput.Parent = frame
 styleButton(speedhackButton, "Enable Speedhack", UDim2.new(0, 10, 0, 140))
 
 -- Настройка кнопки для выбора клавиши Speedhack
-styleButton(keybindButton, "Speedhack Key: LeftShift", UDim2.new(0, 10, 0, 180))
+styleButton(keybindButton, "Speedhack Key: R", UDim2.new(0, 10, 0, 180))
+
+-- Настройка кнопки для выбора клавиши полета
+styleButton(flyKeybindButton, "Fly Key: G", UDim2.new(0, 10, 0, 220))
 
 -- Функция полета
 local function fly()
@@ -205,7 +216,7 @@ end
 local function setSpeedhackKeybind()
 	keybindListening = true
 	keybindButton.Text = "Press any key..."
-	
+
 	local connection
 	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
 		if keybindListening and not gameProcessed then
@@ -219,10 +230,32 @@ local function setSpeedhackKeybind()
 	end)
 end
 
+-- Функция для настройки клавиши полета
+local function setFlyKeybind()
+	flyKeybindListening = true
+	flyKeybindButton.Text = "Press any key..."
+
+	local connection
+	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+		if flyKeybindListening and not gameProcessed then
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				flyKey = input.KeyCode
+				flyKeybindButton.Text = "Fly Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+				flyKeybindListening = false
+				connection:Disconnect()
+			end
+		end
+	end)
+end
+
 -- Обработчик нажатия клавиш для Speedhack
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-	if not gameProcessed and input.KeyCode == speedhackKey then
-		toggleSpeedhack()
+	if not gameProcessed then
+		if input.KeyCode == speedhackKey then
+			toggleSpeedhack()
+		elseif input.KeyCode == flyKey then
+			toggleFly()
+		end
 	end
 end)
 
@@ -236,6 +269,7 @@ end
 flyButton.MouseButton1Click:Connect(toggleFly)
 speedhackButton.MouseButton1Click:Connect(toggleSpeedhack)
 keybindButton.MouseButton1Click:Connect(setSpeedhackKeybind)
+flyKeybindButton.MouseButton1Click:Connect(setFlyKeybind)
 
 -- Привязка функции к кнопке сворачивания
 toggleButton.MouseButton1Click:Connect(toggleMenu)
@@ -243,6 +277,7 @@ toggleButton.MouseButton1Click:Connect(toggleMenu)
 -- Восстанавливаем меню после смерти
 restoreMenuOnDeath()
 
+-- Добавляем заголовок
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(0, 380, 0, 50) -- Размер надписи
 titleLabel.Position = UDim2.new(0, 10, 0, -40) -- Позиция надписи (над фреймом)
