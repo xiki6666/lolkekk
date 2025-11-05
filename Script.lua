@@ -38,21 +38,21 @@ local originalDurations = {}
 
 -- Обновление меню после смерти
 local function restoreMenuOnDeath()
-	local player = game.Players.LocalPlayer
-	player.CharacterAdded:Connect(function(character)
-		wait(1)
-		screenGui.Parent = player:WaitForChild("PlayerGui")
-		frame.Visible = menuVisible
+    local player = game.Players.LocalPlayer
+    player.CharacterAdded:Connect(function(character)
+        wait(1)
+        screenGui.Parent = player:WaitForChild("PlayerGui")
+        frame.Visible = menuVisible
 
-		if speedhackEnabled then
-			character:WaitForChild("Humanoid").WalkSpeed = speedhackSpeed
-		end
-
-		-- Восстанавливаем состояние ProximityPrompt после смерти
-		if proximityPromptEnabled then
-			updateAllPrompts()
-		end
-	end)
+        if speedhackEnabled then
+            character:WaitForChild("Humanoid").WalkSpeed = speedhackSpeed
+        end
+        
+        -- Восстанавливаем состояние ProximityPrompt после смерти
+        if proximityPromptEnabled then
+            updateAllPrompts()
+        end
+    end)
 end
 
 -- Настройка ScreenGui
@@ -87,15 +87,15 @@ toggleButton.Parent = screenGui
 
 -- Функция для стилизации кнопок
 local function styleButton(button, text, position)
-	button.Size = UDim2.new(0, 380, 0, 30)
-	button.Position = position
-	button.Text = text
-	button.TextScaled = true
-	button.TextColor3 = Color3.fromRGB(255, 255, 255)
-	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	button.BorderColor3 = Color3.fromRGB(0, 170, 255)
-	button.BorderSizePixel = 2
-	button.Parent = frame
+    button.Size = UDim2.new(0, 380, 0, 30)
+    button.Position = position
+    button.Text = text
+    button.TextScaled = true
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.BorderColor3 = Color3.fromRGB(0, 170, 255)
+    button.BorderSizePixel = 2
+    button.Parent = frame
 end
 
 -- Настройка кнопки полета
@@ -146,30 +146,30 @@ styleButton(proximityKeybindButton, "Proximity Key: J", UDim2.new(0, 10, 0, 380)
 
 -- Функция для применения изменений ко всем промптам
 local function updateAllPrompts()
-	for _, prompt in ipairs(game:GetService("Workspace"):GetDescendants()) do
-		if prompt:IsA("ProximityPrompt") then
-			if proximityPromptEnabled then
-				if not originalDurations[prompt] then
-					originalDurations[prompt] = prompt.HoldDuration
-				end
-				prompt.HoldDuration = 0
-			else
-				if originalDurations[prompt] then
-					prompt.HoldDuration = originalDurations[prompt]
-				end
-			end
-		end
-	end
+    for _, prompt in ipairs(game:GetService("Workspace"):GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then
+            if proximityPromptEnabled then
+                if not originalDurations[prompt] then
+                    originalDurations[prompt] = prompt.HoldDuration
+                end
+                prompt.HoldDuration = 0
+            else
+                if originalDurations[prompt] then
+                    prompt.HoldDuration = originalDurations[prompt]
+                end
+            end
+        end
+    end
 end
 
 -- Обработчик новых ProximityPrompt
 local function onDescendantAdded(descendant)
-	if descendant:IsA("ProximityPrompt") then
-		if proximityPromptEnabled then
-			originalDurations[descendant] = descendant.HoldDuration
-			descendant.HoldDuration = 0
-		end
-	end
+    if descendant:IsA("ProximityPrompt") then
+        if proximityPromptEnabled then
+            originalDurations[descendant] = descendant.HoldDuration
+            descendant.HoldDuration = 0
+        end
+    end
 end
 
 -- Подписываемся на событие добавления новых объектов
@@ -177,227 +177,227 @@ game:GetService("Workspace").DescendantAdded:Connect(onDescendantAdded)
 
 -- Функция переключения ProximityPrompt
 local function toggleProximityPrompts()
-	proximityPromptEnabled = not proximityPromptEnabled
-
-	if proximityPromptEnabled then
-		proximityPromptButton.Text = "Enable ProximityPrompt"
-		proximityPromptButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-	else
-		proximityPromptButton.Text = "Disable ProximityPrompt"
-		proximityPromptButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	end
-
-	updateAllPrompts()
+    proximityPromptEnabled = not proximityPromptEnabled
+    
+    if proximityPromptEnabled then
+        proximityPromptButton.Text = "Enable ProximityPrompt"
+        proximityPromptButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        proximityPromptButton.Text = "Disable ProximityPrompt"
+        proximityPromptButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    end
+    
+    updateAllPrompts()
 end
 
 -- Функция для настройки клавиши ProximityPrompt
 local function setProximityKeybind()
-	proximityKeybindListening = true
-	proximityKeybindButton.Text = "Press any key..."
+    proximityKeybindListening = true
+    proximityKeybindButton.Text = "Press any key..."
 
-	local connection
-	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-		if proximityKeybindListening and not gameProcessed then
-			if input.UserInputType == Enum.UserInputType.Keyboard then
-				proximityKey = input.KeyCode
-				proximityKeybindButton.Text = "Proximity Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-				proximityKeybindListening = false
-				connection:Disconnect()
-			end
-		end
-	end)
+    local connection
+    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if proximityKeybindListening and not gameProcessed then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                proximityKey = input.KeyCode
+                proximityKeybindButton.Text = "Proximity Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                proximityKeybindListening = false
+                connection:Disconnect()
+            end
+        end
+    end)
 end
 
 -- Функция полета
 local function fly()
-	local player = game.Players.LocalPlayer
-	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-	bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-	bodyVelocity.Parent = humanoidRootPart
+    bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.Parent = humanoidRootPart
 
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-	bodyGyro.CFrame = humanoidRootPart.CFrame
-	bodyGyro.Parent = humanoidRootPart
+    bodyGyro = Instance.new("BodyGyro")
+    bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bodyGyro.CFrame = humanoidRootPart.CFrame
+    bodyGyro.Parent = humanoidRootPart
 
-	flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
-		local camera = workspace.CurrentCamera
-		local moveDirection = Vector3.new(0, 0, 0)
+    flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        local camera = workspace.CurrentCamera
+        local moveDirection = Vector3.new(0, 0, 0)
 
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
-			moveDirection = moveDirection + (camera.CFrame.LookVector * speed)
-		end
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
-			moveDirection = moveDirection - (camera.CFrame.LookVector * speed)
-		end
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
-			moveDirection = moveDirection - (camera.CFrame.RightVector * speed)
-		end
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
-			moveDirection = moveDirection + (camera.CFrame.RightVector * speed)
-		end
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
-			moveDirection = moveDirection + Vector3.new(0, speed, 0)
-		end
-		if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) then
-			moveDirection = moveDirection - Vector3.new(0, speed, 0)
-		end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+            moveDirection = moveDirection + (camera.CFrame.LookVector * speed)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+            moveDirection = moveDirection - (camera.CFrame.LookVector * speed)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+            moveDirection = moveDirection - (camera.CFrame.RightVector * speed)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+            moveDirection = moveDirection + (camera.CFrame.RightVector * speed)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
+            moveDirection = moveDirection + Vector3.new(0, speed, 0)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftControl) then
+            moveDirection = moveDirection - Vector3.new(0, speed, 0)
+        end
 
-		bodyVelocity.Velocity = moveDirection
-		bodyGyro.CFrame = camera.CFrame
-	end)
+        bodyVelocity.Velocity = moveDirection
+        bodyGyro.CFrame = camera.CFrame
+    end)
 end
 
 -- Функция для включения/выключения полета
 local function toggleFly()
-	flying = not flying
-	flyButton.Text = flying and "Disable Fly" or "Enable Fly"
+    flying = not flying
+    flyButton.Text = flying and "Disable Fly" or "Enable Fly"
 
-	if flying then
-		fly()
-	else
-		if flyConnection then flyConnection:Disconnect() end
-		if bodyVelocity then bodyVelocity:Destroy() end
-		if bodyGyro then bodyGyro:Destroy() end
-		local humanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-		humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
-	end
+    if flying then
+        fly()
+    else
+        if flyConnection then flyConnection:Disconnect() end
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        local humanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+    end
 end
 
 -- Функция телепортации
 local function toggleTeleport()
-	local player = game.Players.LocalPlayer
-	local character = player.Character
-	if not character then return end
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
 
-	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-	if not humanoidRootPart then return end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
 
-	teleportToggle = not teleportToggle
+    teleportToggle = not teleportToggle
 
-	if teleportToggle then
-		humanoidRootPart.CFrame = CFrame.new(Vector3.new(170.43, 3.66, 474.95))
-		teleportButton.Text = "Teleport to Position 2"
-	else
-		humanoidRootPart.CFrame = CFrame.new(Vector3.new(172.26, 47.47, 426.68))
-		teleportButton.Text = "Teleport to Position 1"
-	end
+    if teleportToggle then
+        humanoidRootPart.CFrame = CFrame.new(Vector3.new(170.43, 3.66, 474.95))
+        teleportButton.Text = "Teleport to Position 2"
+    else
+        humanoidRootPart.CFrame = CFrame.new(Vector3.new(172.26, 47.47, 426.68))
+        teleportButton.Text = "Teleport to Position 1"
+    end
 end
 
 -- Функция для изменения скорости полета
 speedInput.FocusLost:Connect(function(enterPressed)
-	local newSpeed = tonumber(speedInput.Text)
-	if newSpeed then
-		speed = newSpeed
-		speedInput.Text = "Speed: " .. speed
-	else
-		speedInput.Text = "Invalid Input"
-	end
+    local newSpeed = tonumber(speedInput.Text)
+    if newSpeed then
+        speed = newSpeed
+        speedInput.Text = "Speed: " .. speed
+    else
+        speedInput.Text = "Invalid Input"
+    end
 end)
 
 -- Функция для изменения скорости Speedhack
 speedhackInput.FocusLost:Connect(function(enterPressed)
-	local newSpeedhackSpeed = tonumber(speedhackInput.Text)
-	if newSpeedhackSpeed then
-		speedhackSpeed = newSpeedhackSpeed
-		if speedhackEnabled then
-			game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedhackSpeed
-		end
-		speedhackInput.Text = "Speedhack: " .. speedhackSpeed
-	else
-		speedhackInput.Text = "Invalid Input"
-	end
+    local newSpeedhackSpeed = tonumber(speedhackInput.Text)
+    if newSpeedhackSpeed then
+        speedhackSpeed = newSpeedhackSpeed
+        if speedhackEnabled then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedhackSpeed
+        end
+        speedhackInput.Text = "Speedhack: " .. speedhackSpeed
+    else
+        speedhackInput.Text = "Invalid Input"
+    end
 end)
 
 -- Функция включения/выключения Speedhack
 local function toggleSpeedhack()
-	speedhackEnabled = not speedhackEnabled
-	speedhackButton.Text = speedhackEnabled and "Disable Speedhack" or "Enable Speedhack"
+    speedhackEnabled = not speedhackEnabled
+    speedhackButton.Text = speedhackEnabled and "Disable Speedhack" or "Enable Speedhack"
 
-	if speedhackEnabled then
-		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedhackSpeed
-	else
-		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-	end
+    if speedhackEnabled then
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedhackSpeed
+    else
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end
 end
 
 -- Функция для настройки клавиши Speedhack
 local function setSpeedhackKeybind()
-	keybindListening = true
-	keybindButton.Text = "Press any key..."
+    keybindListening = true
+    keybindButton.Text = "Press any key..."
 
-	local connection
-	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-		if keybindListening and not gameProcessed then
-			if input.UserInputType == Enum.UserInputType.Keyboard then
-				speedhackKey = input.KeyCode
-				keybindButton.Text = "Speedhack Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-				keybindListening = false
-				connection:Disconnect()
-			end
-		end
-	end)
+    local connection
+    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if keybindListening and not gameProcessed then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                speedhackKey = input.KeyCode
+                keybindButton.Text = "Speedhack Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                keybindListening = false
+                connection:Disconnect()
+            end
+        end
+    end)
 end
 
 -- Функция для настройки клавиши полета
 local function setFlyKeybind()
-	flyKeybindListening = true
-	flyKeybindButton.Text = "Press any key..."
+    flyKeybindListening = true
+    flyKeybindButton.Text = "Press any key..."
 
-	local connection
-	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-		if flyKeybindListening and not gameProcessed then
-			if input.UserInputType == Enum.UserInputType.Keyboard then
-				flyKey = input.KeyCode
-				flyKeybindButton.Text = "Fly Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-				flyKeybindListening = false
-				connection:Disconnect()
-			end
-		end
-	end)
+    local connection
+    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if flyKeybindListening and not gameProcessed then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                flyKey = input.KeyCode
+                flyKeybindButton.Text = "Fly Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                flyKeybindListening = false
+                connection:Disconnect()
+            end
+        end
+    end)
 end
 
 -- Функция для настройки клавиши телепортации
 local function setTeleportKeybind()
-	teleportKeybindListening = true
-	teleportKeybindButton.Text = "Press any key..."
+    teleportKeybindListening = true
+    teleportKeybindButton.Text = "Press any key..."
 
-	local connection
-	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-		if teleportKeybindListening and not gameProcessed then
-			if input.UserInputType == Enum.UserInputType.Keyboard then
-				teleportKey = input.KeyCode
-				teleportKeybindButton.Text = "Teleport Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
-				teleportKeybindListening = false
-				connection:Disconnect()
-			end
-		end
-	end)
+    local connection
+    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if teleportKeybindListening and not gameProcessed then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                teleportKey = input.KeyCode
+                teleportKeybindButton.Text = "Teleport Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+                teleportKeybindListening = false
+                connection:Disconnect()
+            end
+        end
+    end)
 end
 
 -- Обработчик нажатия клавиш для всех функций
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-	if not gameProcessed then
-		if input.KeyCode == speedhackKey then
-			toggleSpeedhack()
-		elseif input.KeyCode == flyKey then
-			toggleFly()
-		elseif input.KeyCode == teleportKey then
-			toggleTeleport()
-		elseif input.KeyCode == proximityKey then
-			toggleProximityPrompts()
-		end
-	end
+    if not gameProcessed then
+        if input.KeyCode == speedhackKey then
+            toggleSpeedhack()
+        elseif input.KeyCode == flyKey then
+            toggleFly()
+        elseif input.KeyCode == teleportKey then
+            toggleTeleport()
+        elseif input.KeyCode == proximityKey then
+            toggleProximityPrompts()
+        end
+    end
 end)
 
 -- Функция для скрытия/показа меню
 local function toggleMenu()
-	menuVisible = not menuVisible
-	frame.Visible = menuVisible
+    menuVisible = not menuVisible
+    frame.Visible = menuVisible
 end
 
 -- Привязка функций к кнопкам
