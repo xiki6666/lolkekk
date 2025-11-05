@@ -8,6 +8,8 @@ local speedhackInput = Instance.new("TextBox") -- Поле для ввода с�
 local speedhackButton = Instance.new("TextButton") -- Кнопка включения/выключения Speedhack
 local keybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши Speedhack
 local flyKeybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши полета
+local teleportButton = Instance.new("TextButton") -- Новая кнопка телепортации
+local teleportKeybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши телепортации
 
 -- Переменные для управления полетом, Speedhack
 local flying = false
@@ -20,8 +22,11 @@ local bodyGyro
 local menuVisible = true
 local speedhackKey = Enum.KeyCode.R -- Клавиша по умолчанию для Speedhack изменена на R
 local flyKey = Enum.KeyCode.G -- Клавиша по умолчанию для полета
+local teleportKey = Enum.KeyCode.T -- Клавиша по умолчанию для телепортации
 local keybindListening = false
 local flyKeybindListening = false
+local teleportKeybindListening = false
+local teleportToggle = false -- Переключатель для телепортации
 
 -- Обновление меню после смерти
 local function restoreMenuOnDeath()
@@ -44,7 +49,7 @@ screenGui.ResetOnSpawn = false -- Чтобы не сбрасывалось по�
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Настройка фрейма (меню)
-frame.Size = UDim2.new(0, 400, 0, 280) -- Увеличили высоту меню для новой кнопки
+frame.Size = UDim2.new(0, 400, 0, 360) -- Увеличили высоту меню для новой кнопки
 frame.Position = UDim2.new(0.5, -200, 0.5, -250) -- Центр экрана
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- Темно-серый цвет
 frame.BackgroundTransparency = 0.2 -- Полупозрачность
@@ -115,6 +120,12 @@ styleButton(keybindButton, "Speedhack Key: R", UDim2.new(0, 10, 0, 180))
 -- Настройка кнопки для выбора клавиши полета
 styleButton(flyKeybindButton, "Fly Key: G", UDim2.new(0, 10, 0, 220))
 
+-- Настройка новой кнопки телепортации
+styleButton(teleportButton, "Teleport to Position 1", UDim2.new(0, 10, 0, 260))
+
+-- Настройка кнопки для выбора клавиши телепортации
+styleButton(teleportKeybindButton, "Teleport Key: T", UDim2.new(0, 10, 0, 300))
+
 -- Функция полета
 local function fly()
 	local player = game.Players.LocalPlayer
@@ -172,6 +183,28 @@ local function toggleFly()
 		if bodyGyro then bodyGyro:Destroy() end
 		local humanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 		humanoidRootPart.Velocity = Vector3.new(0, 0, 0) -- Останавливаем движение
+	end
+end
+
+-- Функция телепортации
+local function toggleTeleport()
+	local player = game.Players.LocalPlayer
+	local character = player.Character
+	if not character then return end
+
+	local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then return end
+
+	teleportToggle = not teleportToggle
+
+	if teleportToggle then
+		-- Первая позиция
+		humanoidRootPart.CFrame = CFrame.new(Vector3.new(170.43, 3.66, 474.95))
+		teleportButton.Text = "Teleport to Position 2"
+	else
+		-- Вторая позиция
+		humanoidRootPart.CFrame = CFrame.new(Vector3.new(172.26, 47.47, 426.68))
+		teleportButton.Text = "Teleport to Position 1"
 	end
 end
 
@@ -248,13 +281,33 @@ local function setFlyKeybind()
 	end)
 end
 
--- Обработчик нажатия клавиш для Speedhack
+-- Функция для настройки клавиши телепортации
+local function setTeleportKeybind()
+	teleportKeybindListening = true
+	teleportKeybindButton.Text = "Press any key..."
+
+	local connection
+	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+		if teleportKeybindListening and not gameProcessed then
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				teleportKey = input.KeyCode
+				teleportKeybindButton.Text = "Teleport Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+				teleportKeybindListening = false
+				connection:Disconnect()
+			end
+		end
+	end)
+end
+
+-- Обработчик нажатия клавиш для Speedhack, полета и телепортации
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
 	if not gameProcessed then
 		if input.KeyCode == speedhackKey then
 			toggleSpeedhack()
 		elseif input.KeyCode == flyKey then
 			toggleFly()
+		elseif input.KeyCode == teleportKey then
+			toggleTeleport()
 		end
 	end
 end)
@@ -270,6 +323,8 @@ flyButton.MouseButton1Click:Connect(toggleFly)
 speedhackButton.MouseButton1Click:Connect(toggleSpeedhack)
 keybindButton.MouseButton1Click:Connect(setSpeedhackKeybind)
 flyKeybindButton.MouseButton1Click:Connect(setFlyKeybind)
+teleportButton.MouseButton1Click:Connect(toggleTeleport)
+teleportKeybindButton.MouseButton1Click:Connect(setTeleportKeybind)
 
 -- Привязка функции к кнопке сворачивания
 toggleButton.MouseButton1Click:Connect(toggleMenu)
