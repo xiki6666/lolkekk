@@ -3,86 +3,98 @@ local screenGui = Instance.new("ScreenGui")
 local frame = Instance.new("Frame")
 local toggleButton = Instance.new("TextButton")
 local flyButton = Instance.new("TextButton")
-local speedInput = Instance.new("TextBox") -- Поле для ввода скорости полета
-local speedhackInput = Instance.new("TextBox") -- Поле для ввода скорости Speedhack
-local speedhackButton = Instance.new("TextButton") -- Кнопка включения/выключения Speedhack
-local keybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши Speedhack
-local flyKeybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши полета
-local teleportButton = Instance.new("TextButton") -- Новая кнопка телепортации
-local teleportKeybindButton = Instance.new("TextButton") -- Кнопка для настройки клавиши телепортации
+local speedInput = Instance.new("TextBox")
+local speedhackInput = Instance.new("TextBox")
+local speedhackButton = Instance.new("TextButton")
+local keybindButton = Instance.new("TextButton")
+local flyKeybindButton = Instance.new("TextButton")
+local teleportButton = Instance.new("TextButton")
+local teleportKeybindButton = Instance.new("TextButton")
+local proximityPromptButton = Instance.new("TextButton")
+local proximityKeybindButton = Instance.new("TextButton")
 
 -- Переменные для управления полетом, Speedhack
 local flying = false
-local speed = 50 -- Скорость полета по умолчанию
-local speedhackSpeed = 33 -- Стандартная скорость передвижения изменена на 33
+local speed = 50
+local speedhackSpeed = 33
 local speedhackEnabled = false
 local flyConnection
 local bodyVelocity
 local bodyGyro
 local menuVisible = true
-local speedhackKey = Enum.KeyCode.R -- Клавиша по умолчанию для Speedhack изменена на R
-local flyKey = Enum.KeyCode.G -- Клавиша по умолчанию для полета
-local teleportKey = Enum.KeyCode.T -- Клавиша по умолчанию для телепортации
+local speedhackKey = Enum.KeyCode.R
+local flyKey = Enum.KeyCode.G
+local teleportKey = Enum.KeyCode.T
+local proximityKey = Enum.KeyCode.J
 local keybindListening = false
 local flyKeybindListening = false
 local teleportKeybindListening = false
-local teleportToggle = false -- Переключатель для телепортации
+local proximityKeybindListening = false
+local teleportToggle = false
+
+-- Переменные для ProximityPrompt
+local proximityPromptEnabled = false
+local originalDurations = {}
 
 -- Обновление меню после смерти
 local function restoreMenuOnDeath()
 	local player = game.Players.LocalPlayer
 	player.CharacterAdded:Connect(function(character)
-		wait(1) -- Небольшая задержка после возрождения
+		wait(1)
 		screenGui.Parent = player:WaitForChild("PlayerGui")
 		frame.Visible = menuVisible
 
-		-- Восстанавливаем Speedhack если был включен
 		if speedhackEnabled then
 			character:WaitForChild("Humanoid").WalkSpeed = speedhackSpeed
+		end
+
+		-- Восстанавливаем состояние ProximityPrompt после смерти
+		if proximityPromptEnabled then
+			updateAllPrompts()
 		end
 	end)
 end
 
 -- Настройка ScreenGui
 screenGui.Name = "MenuGui"
-screenGui.ResetOnSpawn = false -- Чтобы не сбрасывалось после смерти
+screenGui.ResetOnSpawn = false
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Настройка фрейма (меню)
-frame.Size = UDim2.new(0, 400, 0, 360) -- Увеличили высоту меню для новой кнопки
-frame.Position = UDim2.new(0.5, -200, 0.5, -250) -- Центр экрана
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- Темно-серый цвет
-frame.BackgroundTransparency = 0.2 -- Полупозрачность
-frame.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
-frame.BorderSizePixel = 2 -- Размер обводки
-frame.Active = true -- Для перетаскивания
-frame.Draggable = true -- Возможность перетаскивания
+frame.Size = UDim2.new(0, 400, 0, 440)
+frame.Position = UDim2.new(0.5, -200, 0.5, -250)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BackgroundTransparency = 0.2
+frame.BorderColor3 = Color3.fromRGB(0, 170, 255)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
 frame.Parent = screenGui
 
 -- Закругляем углы фрейма
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10) -- Радиус закругления
+corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = frame
 
 -- Настройка кнопки сворачивания
-toggleButton.Size = UDim2.new(0, 150, 0, 30) -- Размер кнопки
-toggleButton.Position = UDim2.new(0.5, -75, 0, -60) -- Над меню
+toggleButton.Size = UDim2.new(0, 150, 0, 30)
+toggleButton.Position = UDim2.new(0.5, -75, 0, -60)
 toggleButton.Text = "Toggle Menu"
 toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-toggleButton.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
+toggleButton.BorderColor3 = Color3.fromRGB(0, 170, 255)
 toggleButton.BorderSizePixel = 2
 toggleButton.Parent = screenGui
 
 -- Функция для стилизации кнопок
 local function styleButton(button, text, position)
-	button.Size = UDim2.new(0, 380, 0, 30) -- Широкие по горизонтали и узкие по вертикали
-	button.Position = position -- Позиция кнопки
+	button.Size = UDim2.new(0, 380, 0, 30)
+	button.Position = position
 	button.Text = text
 	button.TextScaled = true
-	button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Белый текст
-	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Темный фон
-	button.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
-	button.BorderSizePixel = 2 -- Обводка
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	button.BorderColor3 = Color3.fromRGB(0, 170, 255)
+	button.BorderSizePixel = 2
 	button.Parent = frame
 end
 
@@ -92,22 +104,22 @@ styleButton(flyButton, "Enable Fly", UDim2.new(0, 10, 0, 20))
 -- Настройка поля ввода скорости полета
 speedInput.Size = UDim2.new(0, 380, 0, 30)
 speedInput.Position = UDim2.new(0, 10, 0, 60)
-speedInput.Text = "Enter Fly Speed" -- Текст по умолчанию
+speedInput.Text = "Enter Fly Speed"
 speedInput.TextScaled = true
 speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-speedInput.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
+speedInput.BorderColor3 = Color3.fromRGB(0, 170, 255)
 speedInput.BorderSizePixel = 2
 speedInput.Parent = frame
 
 -- Настройка поля ввода скорости Speedhack
 speedhackInput.Size = UDim2.new(0, 380, 0, 30)
 speedhackInput.Position = UDim2.new(0, 10, 0, 100)
-speedhackInput.Text = "Enter Speedhack Speed" -- Текст по умолчанию
+speedhackInput.Text = "Enter Speedhack Speed"
 speedhackInput.TextScaled = true
 speedhackInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedhackInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-speedhackInput.BorderColor3 = Color3.fromRGB(0, 170, 255) -- Голубая обводка
+speedhackInput.BorderColor3 = Color3.fromRGB(0, 170, 255)
 speedhackInput.BorderSizePixel = 2
 speedhackInput.Parent = frame
 
@@ -120,11 +132,81 @@ styleButton(keybindButton, "Speedhack Key: R", UDim2.new(0, 10, 0, 180))
 -- Настройка кнопки для выбора клавиши полета
 styleButton(flyKeybindButton, "Fly Key: G", UDim2.new(0, 10, 0, 220))
 
--- Настройка новой кнопки телепортации
+-- Настройка кнопки телепортации
 styleButton(teleportButton, "Teleport to Position 1", UDim2.new(0, 10, 0, 260))
 
 -- Настройка кнопки для выбора клавиши телепортации
 styleButton(teleportKeybindButton, "Teleport Key: T", UDim2.new(0, 10, 0, 300))
+
+-- Настройка кнопки ProximityPrompt
+styleButton(proximityPromptButton, "Disable ProximityPrompt", UDim2.new(0, 10, 0, 340))
+
+-- Настройка кнопки для выбора клавиши ProximityPrompt
+styleButton(proximityKeybindButton, "Proximity Key: J", UDim2.new(0, 10, 0, 380))
+
+-- Функция для применения изменений ко всем промптам
+local function updateAllPrompts()
+	for _, prompt in ipairs(game:GetService("Workspace"):GetDescendants()) do
+		if prompt:IsA("ProximityPrompt") then
+			if proximityPromptEnabled then
+				if not originalDurations[prompt] then
+					originalDurations[prompt] = prompt.HoldDuration
+				end
+				prompt.HoldDuration = 0
+			else
+				if originalDurations[prompt] then
+					prompt.HoldDuration = originalDurations[prompt]
+				end
+			end
+		end
+	end
+end
+
+-- Обработчик новых ProximityPrompt
+local function onDescendantAdded(descendant)
+	if descendant:IsA("ProximityPrompt") then
+		if proximityPromptEnabled then
+			originalDurations[descendant] = descendant.HoldDuration
+			descendant.HoldDuration = 0
+		end
+	end
+end
+
+-- Подписываемся на событие добавления новых объектов
+game:GetService("Workspace").DescendantAdded:Connect(onDescendantAdded)
+
+-- Функция переключения ProximityPrompt
+local function toggleProximityPrompts()
+	proximityPromptEnabled = not proximityPromptEnabled
+
+	if proximityPromptEnabled then
+		proximityPromptButton.Text = "Enable ProximityPrompt"
+		proximityPromptButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	else
+		proximityPromptButton.Text = "Disable ProximityPrompt"
+		proximityPromptButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	end
+
+	updateAllPrompts()
+end
+
+-- Функция для настройки клавиши ProximityPrompt
+local function setProximityKeybind()
+	proximityKeybindListening = true
+	proximityKeybindButton.Text = "Press any key..."
+
+	local connection
+	connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+		if proximityKeybindListening and not gameProcessed then
+			if input.UserInputType == Enum.UserInputType.Keyboard then
+				proximityKey = input.KeyCode
+				proximityKeybindButton.Text = "Proximity Key: " .. tostring(input.KeyCode):gsub("Enum.KeyCode.", "")
+				proximityKeybindListening = false
+				connection:Disconnect()
+			end
+		end
+	end)
+end
 
 -- Функция полета
 local function fly()
@@ -182,7 +264,7 @@ local function toggleFly()
 		if bodyVelocity then bodyVelocity:Destroy() end
 		if bodyGyro then bodyGyro:Destroy() end
 		local humanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-		humanoidRootPart.Velocity = Vector3.new(0, 0, 0) -- Останавливаем движение
+		humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
 	end
 end
 
@@ -198,11 +280,9 @@ local function toggleTeleport()
 	teleportToggle = not teleportToggle
 
 	if teleportToggle then
-		-- Первая позиция
 		humanoidRootPart.CFrame = CFrame.new(Vector3.new(170.43, 3.66, 474.95))
 		teleportButton.Text = "Teleport to Position 2"
 	else
-		-- Вторая позиция
 		humanoidRootPart.CFrame = CFrame.new(Vector3.new(172.26, 47.47, 426.68))
 		teleportButton.Text = "Teleport to Position 1"
 	end
@@ -241,7 +321,7 @@ local function toggleSpeedhack()
 	if speedhackEnabled then
 		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedhackSpeed
 	else
-		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16 -- Возвращаем стандартную скорость
+		game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
 	end
 end
 
@@ -299,7 +379,7 @@ local function setTeleportKeybind()
 	end)
 end
 
--- Обработчик нажатия клавиш для Speedhack, полета и телепортации
+-- Обработчик нажатия клавиш для всех функций
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
 	if not gameProcessed then
 		if input.KeyCode == speedhackKey then
@@ -308,6 +388,8 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
 			toggleFly()
 		elseif input.KeyCode == teleportKey then
 			toggleTeleport()
+		elseif input.KeyCode == proximityKey then
+			toggleProximityPrompts()
 		end
 	end
 end)
@@ -325,6 +407,8 @@ keybindButton.MouseButton1Click:Connect(setSpeedhackKeybind)
 flyKeybindButton.MouseButton1Click:Connect(setFlyKeybind)
 teleportButton.MouseButton1Click:Connect(toggleTeleport)
 teleportKeybindButton.MouseButton1Click:Connect(setTeleportKeybind)
+proximityPromptButton.MouseButton1Click:Connect(toggleProximityPrompts)
+proximityKeybindButton.MouseButton1Click:Connect(setProximityKeybind)
 
 -- Привязка функции к кнопке сворачивания
 toggleButton.MouseButton1Click:Connect(toggleMenu)
@@ -332,16 +416,19 @@ toggleButton.MouseButton1Click:Connect(toggleMenu)
 -- Восстанавливаем меню после смерти
 restoreMenuOnDeath()
 
+-- Обработка существующих ProximityPrompt при запуске
+updateAllPrompts()
+
 -- Добавляем заголовок
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0, 380, 0, 50) -- Размер надписи
-titleLabel.Position = UDim2.new(0, 10, 0, -40) -- Позиция надписи (над фреймом)
-titleLabel.Text = "chalun" -- Текст надписи
-titleLabel.TextScaled = true -- Автоматическое масштабирование текста
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Белый цвет текста
-titleLabel.Font = Enum.Font.GothamBold -- Стиль шрифта (например, GothamBold)
-titleLabel.TextStrokeTransparency = 0 -- Сделаем обводку видимой
-titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 170, 255) -- Цвет обводки (голубой)
-titleLabel.BackgroundTransparency = 1 -- Прозрачный фон
-titleLabel.BorderSizePixel = 0 -- Без обводки самого label
-titleLabel.Parent = frame -- Добавляем надпись как дочерний элемент фрейма
+titleLabel.Size = UDim2.new(0, 380, 0, 50)
+titleLabel.Position = UDim2.new(0, 10, 0, -40)
+titleLabel.Text = "chalun"
+titleLabel.TextScaled = true
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextStrokeTransparency = 0
+titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 170, 255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.BorderSizePixel = 0
+titleLabel.Parent = frame
